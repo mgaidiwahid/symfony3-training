@@ -13,4 +13,10 @@ class AdvertController extends Controller
                         ->render('OCPlatformBundle:Advert:index.html.twig', array('nom' => 'winzou'));
         return new Response($content);
     }
+    public function quitAction()
+    {
+        $content = $this->get('templating')
+                        ->render('OCPlatformBundle:Advert:quit.html.twig', array('prenom' => 'admin'));
+        return new Response($content);
+    }    
 }
