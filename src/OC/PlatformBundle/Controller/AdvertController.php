@@ -96,11 +96,18 @@ class AdvertController extends Controller
 
   public function deleteAction($id)
   {
-    // Ici, on récupérera l'annonce correspondant à $id
+    $em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
+    if (!$advert) {
+            return $this->redirectToRoute('oc_platform_home');
+    } 
+    $em->remove($advert);
+    $em->flush();
 
-    // Ici, on gérera la suppression de l'annonce en question
-
-    return $this->render('OCPlatformBundle:Advert:delete.html.twig');
+    return $this->redirectToRoute('oc_platform_home');       
+    /*return $this->render('OCPlatformBundle:Advert:delete.html.twig', array(
+      'advert' => $id
+    ));*/
   }
   public function menuAction($limit)
   {
