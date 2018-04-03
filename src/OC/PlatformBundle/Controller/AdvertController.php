@@ -5,6 +5,9 @@
 namespace OC\PlatformBundle\Controller;
 
 use OC\PlatformBundle\Entity\Advert;
+use OC\PlatformBundle\Entity\Image;
+use OC\PlatformBundle\Entity\Application;
+use OC\PlatformBundle\Entity\AdvertSkill;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -49,21 +52,57 @@ class AdvertController extends Controller
     if (null === $advert) {
       throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
     }
+    $listApplications = $this->getDoctrine()
+                             ->getManager()
+                             ->getRepository('OCPlatformBundle:Application')
+                             ->findBy(array('advert' => $advert));
+    $listAdvertSkills = $this->getDoctrine()
+                             ->getManager()
+                             ->getRepository('OCPlatformBundle:AdvertSkill')
+                             ->findBy(array('advert' => $advert));
     
     return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
-      'advert' => $advert
+      'advert' => $advert,
+      'listApplications' => $listApplications,
+      'listAdvertSkills' => $listAdvertSkills,  
     ));
   }
 
   public function addAction(Request $request)
   {
     $advert = new Advert();
-    $advert->setTitle('Recherche développeur Symfony.');
+    $advert->setTitle('Recherche développeur drupal 2018.');
     $advert->setAuthor('Alexandre');
-    $advert->setContent("Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…");
+    $advert->setContent("Nous recherchons un développeur drupal débutant sur Paris…");
+    
+
+
+    $application1 = new Application();
+    $application1->setAuthor('Marine');
+    $application1->setContent("J'ai toutes les qualités requises.");
+
+    $application2 = new Application();
+    $application2->setAuthor('Pierre');
+    $application2->setContent("Je suis très motivé.");
+
+    $application1->setAdvert($advert);
+    $application2->setAdvert($advert);
     
     $em = $this->getDoctrine()->getManager();
-    $em->persist($advert);   
+    $listSkills = $em->getRepository('OCPlatformBundle:Skill')->findAll();
+    
+    foreach ($listSkills as $skill) {
+      $advertSkill = new AdvertSkill();
+      $advertSkill->setAdvert($advert);
+      $advertSkill->setSkill($skill);
+      $advertSkill->setLevel('Expert');
+      $em->persist($advertSkill);
+
+    }    
+    $em->persist($advert); 
+    $em->persist($application1);
+    $em->persist($application2);
+    
     $em->flush();    
 
     // Si la requête est en POST, c'est que le visiteur a soumis le formulaire
@@ -81,14 +120,19 @@ class AdvertController extends Controller
 
   public function editAction($id, Request $request)
   {
-   $advert = array(
-      'title'   => 'Recherche développpeur Symfony',
-      'id'      => $id,
-      'author'  => 'Alexandre',
-      'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
-      'date'    => new \Datetime()
-    );
 
+    $em = $this->getDoctrine()->getManager();
+    $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
+    
+    if (null === $advert) {
+         throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+   }
+    $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();  
+    foreach ($listCategories as $category) {
+      $advert->addCategory($category);
+    }    
+    $em->flush();
+    
     return $this->render('OCPlatformBundle:Advert:edit.html.twig', array(
       'advert' => $advert
     ));
@@ -98,10 +142,12 @@ class AdvertController extends Controller
   {
     $em = $this->getDoctrine()->getManager();
     $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
-    if (!$advert) {
-            return $this->redirectToRoute('oc_platform_home');
-    } 
-    $em->remove($advert);
+    if (null === $advert) {
+      throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+    }
+    foreach ($advert->getCategories() as $category) {
+      $advert->removeCategory($category);
+    }
     $em->flush();
 
     return $this->redirectToRoute('oc_platform_home');       
