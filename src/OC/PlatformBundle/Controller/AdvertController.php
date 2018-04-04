@@ -36,8 +36,14 @@ class AdvertController extends Controller
         'content' => 'Nous proposons un poste pour webdesigner. Blabla…',
         'date'    => new \Datetime())
     );
+    $repository = $this->getDoctrine()
+      ->getManager()
+      ->getRepository('OCPlatformBundle:Application');      
+    $ApplicationsWithAdvert = $repository->getApplicationsWithAdvert(3);
+    
       return $this->render('OCPlatformBundle:Advert:index.html.twig', array(
-      'listAdverts' => $listAdverts
+      'listAdverts' => $listAdverts,
+      'ApplicationsWithAdvert' => $ApplicationsWithAdvert  
     ));
   }
 
@@ -61,10 +67,16 @@ class AdvertController extends Controller
                              ->getRepository('OCPlatformBundle:AdvertSkill')
                              ->findBy(array('advert' => $advert));
     
+     $listAdvertCategories = $this->getDoctrine()
+                             ->getManager()
+                             ->getRepository('OCPlatformBundle:Advert')
+                             ->getAdvertWithCategories(array('Développement web', 'Intégration'));
+    
     return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
       'advert' => $advert,
       'listApplications' => $listApplications,
-      'listAdvertSkills' => $listAdvertSkills,  
+      'listAdvertSkills' => $listAdvertSkills,
+      'listAdvertCategories' => $listAdvertCategories, 
     ));
   }
 

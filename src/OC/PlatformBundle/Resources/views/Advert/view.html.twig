@@ -54,4 +54,13 @@
         <hr>
      {% endfor %} 
    {% endif %}  
+   
+     {% if listAdvertCategories|length > 0 %}
+      <p> Annonces pour  :</p>
+    {% for AdvertCategorie in listAdvertCategories %}
+        <p>{{ AdvertCategorie.advert.title }}</p>
+        <hr>
+     {% endfor %} 
+   {% endif %}  
+   
 {% endblock %}

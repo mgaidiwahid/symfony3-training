@@ -1,7 +1,8 @@
 <?php
 
 namespace OC\PlatformBundle\Repository;
-
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\EntityRepository;
 /**
  * AdvertRepository
  *
@@ -10,4 +11,15 @@ namespace OC\PlatformBundle\Repository;
  */
 class AdvertRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function getAdvertWithCategories(array $categoryNames){
+        
+        $list_adverts = $this->createQueryBuilder('a');
+        $list_adverts->innerJoin('a.categories', 'c')
+                     ->addSelect('c');
+        $list_adverts->where($list_adverts->expr()->in('c.name', $categoryNames));
+        
+        return $list_adverts->getQuery()
+                            ->getResult();
+
+    }
 }

@@ -21,4 +21,19 @@
       <li>Pas (encore !) d'annonces</li>
     {% endfor %}
   </ul>
+  
+   <h2>Dernières annonces 2018</h2>
+    <ul>
+    {% for application in ApplicationsWithAdvert %}
+      <li>
+          <label>{{ application.advert.title }}</label>
+          <span>Par {{ application.author}} le {{ application.date|date('d/m/Y') }}</span>
+          <p>{{ application.content}}</p>
+        
+      </li>
+    {% else %}
+      <li>Pas (encore !) d'annonces</li>
+    {% endfor %}
+  </ul>
+  
   {% endblock %}

@@ -1,7 +1,7 @@
 <?php
 
 namespace OC\PlatformBundle\Repository;
-
+use Doctrine\ORM\EntityRepository;
 /**
  * ApplicationRepository
  *
@@ -10,4 +10,14 @@ namespace OC\PlatformBundle\Repository;
  */
 class ApplicationRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function getApplicationsWithAdvert($limit){
+        
+        $list_apps = $this->createQueryBuilder('a');
+        $list_apps->innerJoin('a.advert', 'ad')
+                  ->addSelect('ad')
+                  ->setMaxResults($limit);
+       
+        return $list_apps->getQuery()
+                         ->getResult();
+    }
 }
