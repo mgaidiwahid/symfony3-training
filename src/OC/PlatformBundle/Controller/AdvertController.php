@@ -8,6 +8,7 @@ use OC\PlatformBundle\Entity\Advert;
 use OC\PlatformBundle\Entity\Image;
 use OC\PlatformBundle\Entity\Application;
 use OC\PlatformBundle\Entity\AdvertSkill;
+use OC\PlatformBundle\Entity\Category;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -70,7 +71,7 @@ class AdvertController extends Controller
      $listAdvertCategories = $this->getDoctrine()
                              ->getManager()
                              ->getRepository('OCPlatformBundle:Advert')
-                             ->getAdvertWithCategories(array('Développement web', 'Intégration'));
+                             ->getAdvertWithCategories(array('Intégration'));
     
     return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
       'advert' => $advert,
@@ -83,18 +84,21 @@ class AdvertController extends Controller
   public function addAction(Request $request)
   {
     $advert = new Advert();
-    $advert->setTitle('Recherche développeur drupal 2018.');
-    $advert->setAuthor('Alexandre');
-    $advert->setContent("Nous recherchons un développeur drupal débutant sur Paris…");
+    $advert->setTitle('Recherche développeur laravel 2019.');
+    $advert->setAuthor('Anonyme');
+    $advert->setEmail('mgaidi.wahid@gmail.com');
+    $advert->setContent("Nous recherchons un développeur laravel débutant sur Paris…");
     
 
 
     $application1 = new Application();
     $application1->setAuthor('Marine');
+    $application1->setEmail('mgaidi.wahid@gmail.com');
     $application1->setContent("J'ai toutes les qualités requises.");
 
     $application2 = new Application();
     $application2->setAuthor('Pierre');
+    $application2->setEmail('wahid.mgaidi@nexus2i.com');
     $application2->setContent("Je suis très motivé.");
 
     $application1->setAdvert($advert);
@@ -141,8 +145,10 @@ class AdvertController extends Controller
    }
     $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();  
     foreach ($listCategories as $category) {
-      $advert->addCategory($category);
-    }    
+     $advert->addCategory($category);
+    }
+
+    
     $em->flush();
     
     return $this->render('OCPlatformBundle:Advert:edit.html.twig', array(
