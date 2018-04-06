@@ -17,34 +17,22 @@ class AdvertController extends Controller
 {
   public function indexAction($page)
   {
-      $listAdverts = array(
-      array(
-        'title'   => 'Recherche développpeur Symfony',
-        'id'      => 1,
-        'author'  => 'Alexandre',
-        'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
-        'date'    => new \Datetime()),
-      array(
-        'title'   => 'Mission de webmaster',
-        'id'      => 2,
-        'author'  => 'Hugo',
-        'content' => 'Nous recherchons un webmaster capable de maintenir notre site internet. Blabla…',
-        'date'    => new \Datetime()),
-      array(
-        'title'   => 'Offre de stage webdesigner',
-        'id'      => 3,
-        'author'  => 'Mathieu',
-        'content' => 'Nous proposons un poste pour webdesigner. Blabla…',
-        'date'    => new \Datetime())
-    );
-    $repository = $this->getDoctrine()
-      ->getManager()
-      ->getRepository('OCPlatformBundle:Application');      
-    $ApplicationsWithAdvert = $repository->getApplicationsWithAdvert(3);
+    if ($page < 1) {
+      throw $this->createNotFoundException("La page ".$page." n'existe pas.");
+    }
+    $nbPerPage = 3;
+    $em = $this->getDoctrine()
+      ->getManager();
+    $listAdverts=  $em->getRepository('OCPlatformBundle:Advert')->getAdverts($page,$nbPerPage);
     
+    $nbPages = ceil(count($listAdverts) / $nbPerPage);
+    if ($page > $nbPages) {
+      throw $this->createNotFoundException("La page ".$page." n'existe pas.");
+    }   
       return $this->render('OCPlatformBundle:Advert:index.html.twig', array(
       'listAdverts' => $listAdverts,
-      'ApplicationsWithAdvert' => $ApplicationsWithAdvert  
+      'nbPages'     => $nbPages,
+      'page'        => $page
     ));
   }
 
@@ -67,71 +55,29 @@ class AdvertController extends Controller
                              ->getManager()
                              ->getRepository('OCPlatformBundle:AdvertSkill')
                              ->findBy(array('advert' => $advert));
-    
-     $listAdvertCategories = $this->getDoctrine()
-                             ->getManager()
-                             ->getRepository('OCPlatformBundle:Advert')
-                             ->getAdvertWithCategories(array('Intégration'));
+
     
     return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
       'advert' => $advert,
       'listApplications' => $listApplications,
-      'listAdvertSkills' => $listAdvertSkills,
-      'listAdvertCategories' => $listAdvertCategories, 
+      'listAdvertSkills' => $listAdvertSkills
     ));
   }
 
   public function addAction(Request $request)
   {
-    $advert = new Advert();
-    $advert->setTitle('Recherche développeur laravel 2019.');
-    $advert->setAuthor('Anonyme');
-    $advert->setEmail('mgaidi.wahid@gmail.com');
-    $advert->setContent("Nous recherchons un développeur laravel débutant sur Paris…");
     
-
-
-    $application1 = new Application();
-    $application1->setAuthor('Marine');
-    $application1->setEmail('mgaidi.wahid@gmail.com');
-    $application1->setContent("J'ai toutes les qualités requises.");
-
-    $application2 = new Application();
-    $application2->setAuthor('Pierre');
-    $application2->setEmail('wahid.mgaidi@nexus2i.com');
-    $application2->setContent("Je suis très motivé.");
-
-    $application1->setAdvert($advert);
-    $application2->setAdvert($advert);
-    
-    $em = $this->getDoctrine()->getManager();
-    $listSkills = $em->getRepository('OCPlatformBundle:Skill')->findAll();
-    
-    foreach ($listSkills as $skill) {
-      $advertSkill = new AdvertSkill();
-      $advertSkill->setAdvert($advert);
-      $advertSkill->setSkill($skill);
-      $advertSkill->setLevel('Expert');
-      $em->persist($advertSkill);
-
-    }    
-    $em->persist($advert); 
-    $em->persist($application1);
-    $em->persist($application2);
-    
-    $em->flush();    
+    $em = $this->getDoctrine()->getManager(); 
 
     // Si la requête est en POST, c'est que le visiteur a soumis le formulaire
     if ($request->isMethod('POST')) {
 
       $request->getSession()->getFlashBag()->add('notice', 'Annonce bien enregistrée.');
 
-      // Puis on redirige vers la page de visualisation de cettte annonce
       return $this->redirectToRoute('oc_platform_view', array('id' => $advert->getId()));
     }
 
-    // Si on n'est pas en POST, alors on affiche le formulaire
-    return $this->render('OCPlatformBundle:Advert:add.html.twig', array('advert' => $advert));
+    return $this->render('OCPlatformBundle:Advert:add.html.twig');
   }
 
   public function editAction($id, Request $request)
@@ -143,16 +89,15 @@ class AdvertController extends Controller
     if (null === $advert) {
          throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
    }
-    $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();  
-    foreach ($listCategories as $category) {
-     $advert->addCategory($category);
-    }
+    if ($request->isMethod('POST')) {
+      $request->getSession()->getFlashBag()->add('notice', 'Annonce bien modifiée.');
+      return $this->redirectToRoute('oc_platform_view', array('id' => $advert->getId()));
 
-    
-    $em->flush();
-    
+    }
     return $this->render('OCPlatformBundle:Advert:edit.html.twig', array(
+
       'advert' => $advert
+
     ));
   }
 
@@ -168,18 +113,16 @@ class AdvertController extends Controller
     }
     $em->flush();
 
-    return $this->redirectToRoute('oc_platform_home');       
-    /*return $this->render('OCPlatformBundle:Advert:delete.html.twig', array(
-      'advert' => $id
-    ));*/
+    return $this->render('OCPlatformBundle:Advert:delete.html.twig');
   }
   public function menuAction($limit)
   {
-
-    $listAdverts = array(
-      array('id' => 2, 'title' => 'Recherche développeur Symfony'),
-      array('id' => 5, 'title' => 'Mission de webmaster'),
-      array('id' => 9, 'title' => 'Offre de stage webdesigner')
+    $em = $this->getDoctrine()->getManager();
+    $listAdverts = $em->getRepository('OCPlatformBundle:Advert')->findBy(
+      array(),                 // Pas de critère
+      array('date' => 'desc'), // On trie par date décroissante
+      $limit,                  // On sélectionne $limit annonces
+      0                        // À partir du premier
     );
 
     return $this->render('OCPlatformBundle:Advert:menu.html.twig', array(
